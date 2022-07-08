@@ -55,7 +55,44 @@ class Board:
                             self.row[slot.row] -= {slot.value}
                             self.column[slot.column] -= {slot.value}
                             self.grid[slot.grid] -= {slot.value}
+    #         self.checkRowsUnique()
+    #         self.checkColsUnique()
+    # def checkRowsUnique(self):
+    #     for i in range(len(self.game_board)):
+    #         for num in self.row[i]:
+    #             count = 0
+    #             slot_for_num = None
+    #             for slot in self.game_board[i]:
+    #                 if slot.value == 0 and num in slot.possible_values:
+    #                     count += 1
+    #                     slot_for_num = slot
+    #             if count == 1:
+    #                 slot.updatePossibleValues(self.row[slot_for_num.row], self.column[slot_for_num.column], self.grid[slot_for_num.grid])
 
+                        
+    # def checkColsUnique(self):
+    #     for i in range(len(self.game_board)):
+    #         for num in self.column[i]:
+    #             count = 0
+    #             slot_for_num = None
+    #             for slot in self.game_board[i]:
+    #                 if slot.value == 0 and num in slot.possible_values:
+    #                     count += 1
+    #                     slot_for_num = slot
+    #             if count == 1:
+    #                 slot.updatePossibleValues(self.row[slot_for_num.row], self.column[slot_for_num.column], self.grid[slot_for_num.grid])
+
+    # def checkGridsUnique(self):
+    #     for i in range(len(self.game_board)):
+    #         for num in self.column[i]:
+    #             count = 0
+    #             slot_for_num = None
+    #             for slot in self.game_board[i]:
+    #                 if slot.value == 0 and num in slot.possible_values:
+    #                     count += 1
+    #                     slot_for_num = slot
+    #             if count == 1:
+    #                 slot.updatePossibleValues(self.row[slot_for_num.row], self.column[slot_for_num.column], self.grid[slot_for_num.grid])
 
 
                 
@@ -98,7 +135,7 @@ class Slot:
             self.updateSlot(next(iter(self.possible_values)))
 
 
-inp_game = "000010000035000040008094036600070000000309450000008000009000700000700200403002000"
+inp_game = "800000900095720600740009001000090000961374000000010069280037000000201700307000204"
 gameboard = Board(inp_game)
 print(gameboard)
 gameboard.getRows()
