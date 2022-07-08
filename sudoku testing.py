@@ -5,10 +5,9 @@ class Board:
         for x in range(9):
             for y in range(9):
                 self.game_board[x][y] = Slot(inp[9*x + y], x, y)
-        self.row = [set(
-        )for i in range(9)]
-        self.grid = [set() for i in range(9)]
-        self.column = [set()for i in range(9)]
+        self.row = [set(j for j in range(10)) for i in range(9)]
+        self.grid = [set(j for j in range(10)) for i in range(9)]
+        self.column = [set(j for j in range(10)) for i in range(9)]
                 
     def __str__(self):
         boardString = ''
@@ -29,14 +28,22 @@ class Board:
 #         return filter(lambda rowOrColVal: rowOrColVal != value,rowOrCol)
     
     def getRows(self):
-        for x in range(9)
-            row_taken_values = (slot.value for slot in game_board[x]).remove(0)
-            self.row[x] = 
-            self.column
+        for x in range(9):
+            row_taken_values = {slot.value for slot in self.game_board[x]}
+            #row_taken_values.discard(0)
+            self.row[x] -= row_taken_values
+            print(self.row[x])
+            
         
-#     def getColumns(self):
+    def getColumns(self):
+        for x in range(9):
+            column_taken_values = {slot.value for slot in self.game_board[:,x]}
+            #row_taken_values.discard(0)
+            self.column[x] -= column_taken_values
+            print(self.column[x])
         
-#     def getGrids(self):
+     def getGrids(self):
+         pass
     
 #     def updaterowsandgridandcolumn(self)
 #         if slot.possibleValues =1,
@@ -83,4 +90,4 @@ class Slot:
 
 inp_game = "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
 gameboard = Board(inp_game)
-print(gameboard)
+gameboard.getColumns()
