@@ -39,6 +39,13 @@ class Board:
                 ret_grids[3*i+j] = self.game_board[3*i:3*i+3,3*j:3*j+3].flatten()
         return ret_grids
 
+    def repGrids(self):
+        ret_grids = np.empty((9,9),dtype = object)
+        for i in range(3):
+            for j in range(3):
+                ret_grids[3*i+j] = self.game_board[3*i:3*i+3,3*j:3*j+3].flatten()
+        return ret_grids
+
     def getRows(self):
         for x in range(9):
             row_taken_values = {slot.value for slot in self.game_board[x]}
@@ -58,6 +65,7 @@ class Board:
                 self.poss_in_grids[3*x+y] -= used_nums
 
     def updateBoard(self):
+
         did_update = False
         for row in self.game_board:
             for slot in row:
@@ -74,6 +82,7 @@ class Board:
             print(self)    
         else:
             self.secondAlgo()
+
 
     def checkSectionUnique(self, section, poss_in_section):
         did_update = False
@@ -126,7 +135,6 @@ class Slot:
         self.grid = 3 * (x//3) + (y//3)
         self.value = int(value)
         self.possible_values = {1,2,3,4,5,6,7,8,9}
-
     def __str__(self):
         return str(self.value)
     
@@ -141,6 +149,7 @@ class Slot:
             self.updateSlot(next(iter(self.possible_values)))
 
 
+
 import time
 #inp_game = "800504013100000600002010570407000905500420000000059460081002000000975182000001000"
 inp_game = "100097000000030008609500003000000640001000000048079005930010006000000000004700530"
@@ -152,7 +161,6 @@ game_board.getRows()
 game_board.getColumns()
 game_board.getGrids()
 game_board.updateBoard()
-
 print("==========================================")
 print(game_board)
 end = time.time()
