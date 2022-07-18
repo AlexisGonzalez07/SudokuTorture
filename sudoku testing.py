@@ -18,16 +18,6 @@ class Board:
         self.getColumns()
         self.getGrids()
 
-
-    def copy(board):
-        copy_board = Board(board.inp[:])
-        copy_board.game_board = board.game_board.copy()
-        copy_board.poss_in_rows = board.poss_in_rows
-        copy_board.poss_in_columns = board.poss_in_columns
-        copy_board.poss_in_grids = board.poss_in_grids
-        copy_board.grid_rep = board.grid_rep
-        return copy_board
-
     def __str__(self):
         board_string = '\n=========================================\n'
         for i in range(9):
@@ -48,10 +38,7 @@ class Board:
             for j in range(9):
                 ret_array[i,j] = self.game_board[i][j].value
         return ret_array
-
-    def PossibleByLine(slot,rowOrCol): #returns true when a value does not already exist in an inputted row or column numpy.array(slot)
-        return filter(lambda rowOrColVal: rowOrColVal != slot.value,rowOrCol)
-
+        
     def repGrids(self):
         ret_grids = np.empty((9,9),dtype = object)
         for i in range(3):
@@ -150,12 +137,15 @@ class Board:
         self.poss_in_columns[slot.column] -= {value}
         self.poss_in_grids[slot.grid] -= {value}
 
+
     def isSolved(self):
         for i in range(9):
             for j in range(9):
                 if self.game_board[i][j].value == 0:
                     return False
         return True
+                
+class Slot:
 
     def findLeastPoss(self):
         for i in range(9):
@@ -193,15 +183,12 @@ class Board:
 
 class Slot:
 
-
-
     def __init__(self, value, x,y):
         self.row = x
         self.column = y
         self.grid = 3 * (x//3) + (y//3)
         self.value = int(value)
         self.possible_values = {1,2,3,4,5,6,7,8,9}
-
     def __str__(self):
         return str(self.value)
     
@@ -212,7 +199,6 @@ class Slot:
 
     def updatePossibleValues(self, row_values, column_values, grid_values):
         self.possible_values = set.intersection(row_values, column_values, grid_values)
-
 
 def averageTimeFull(game):
     times_list = np.zeros(10)
@@ -231,8 +217,6 @@ def main():
     #expert = "070030050000000700030004001040001902006040005800056000010000006000005004200080000" #EXPERT puzzle: average = .25s
     #inp_game = "002090840070600000000000001000000500800009000004080230020007310001000009000030005" #EVIL puzzle: average = .43s
     
-    
-
     easy          = "800020910234510007710080054600100305185000720040602800068000400000000162000407530"
     medium        = "300007086005003000000005320940102050200090700850004000089000007070040000034801900"
     hard          = "000500900050020001300609000070180002105000087008004000004750000030208050000406020"
@@ -275,4 +259,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
