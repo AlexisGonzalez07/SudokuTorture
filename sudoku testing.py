@@ -1,21 +1,25 @@
 import numpy as np
+import time
 class Board:
     def __init__(self, inp):
+        self.inp = inp
         self.game_board = np.empty((9,9),dtype = object)
         for x in range(9):
             for y in range(9):
 
                 self.game_board[x][y] = Slot(inp[9*x + y], x, y)
-                if inp[9*x+y] != 0:
+                if int(inp[9*x+y]) != 0:
                     self.game_board[x][y].possible_values = {0}
         self.poss_in_rows = [set(j for j in range(10)) for i in range(9)]
         self.poss_in_grids = [set(j for j in range(10)) for i in range(9)]
         self.poss_in_columns = [set(j for j in range(10)) for i in range(9)]
         self.grid_rep = self.repGrids()
-
+        self.getRows()
+        self.getColumns()
+        self.getGrids()
 
     def __str__(self):
-        board_string = ''
+        board_string = '\n=========================================\n'
         for i in range(9):
             if i%3 == 0: board_string += '                     \n'; #to have a horizontal spacer between grids of nine
 
@@ -28,17 +32,13 @@ class Board:
 
         return board_string
 
-
-    def PossibleByLine(slot,rowOrCol): #returns true when a value does not already exist in an inputted row or column numpy.array(slot)
-        return filter(lambda rowOrColVal: rowOrColVal != slot.value,rowOrCol)
-
-    def repGrids(self):
-        ret_grids = np.empty((9,9),dtype = object)
-        for i in range(3):
-            for j in range(3):
-                ret_grids[3*i+j] = self.game_board[3*i:3*i+3,3*j:3*j+3].flatten()
-        return ret_grids
-
+    def convertArray(self):
+        ret_array = np.zeros((9,9))
+        for i in range(9):
+            for j in range(9):
+                ret_array[i,j] = self.game_board[i][j].value
+        return ret_array
+        
     def repGrids(self):
         ret_grids = np.empty((9,9),dtype = object)
         for i in range(3):
@@ -65,24 +65,56 @@ class Board:
                 self.poss_in_grids[3*x+y] -= used_nums
 
     def updateBoard(self):
-
         did_update = False
         for row in self.game_board:
             for slot in row:
                 if slot.value == 0:
                     slot.updatePossibleValues(self.poss_in_rows[slot.row], self.poss_in_columns[slot.column], self.poss_in_grids[slot.grid])
-                    if slot.value != 0:
-                        self.poss_in_rows[slot.row] -= {slot.value}
-                        self.poss_in_columns[slot.column] -= {slot.value}
-                        self.poss_in_grids[slot.grid] -= {slot.value}
+                    if len(slot.possible_values) == 1:
+                        self.boardUpdateSlot(slot, next(iter(slot.possible_values)))
                         did_update = True
-        if did_update :
+        if self.isSolved():
+            return
+        elif did_update:  
             self.updateBoard()
-        elif self.isSolved():
-            print(self)    
+        else:  
+            self.thirdAlgo()
+            
+    def secondAlgo(self):
+        did_update = self.checkSectionUnique(self.game_board, self.poss_in_rows)
+        did_update += self.checkSectionUnique(np.transpose(self.game_board), self.poss_in_columns)
+        did_update += self.checkSectionUnique(self.grid_rep, self.poss_in_grids)
+        if self.isSolved():
+            return
+        elif did_update:
+            self.updateBoard()
         else:
-            self.secondAlgo()
+            self.thirdAlgo()
 
+    def thirdAlgo(self):
+        x, y = self.findLeastPoss()
+        if x == None:
+            init_board = self.convertArray()
+            did_finish = self.bruteForce(init_board)
+            if did_finish:
+                return
+            else:
+                print("This board is unsolvable.")
+        else:
+            least_choices_slot = self.game_board[x][y]
+            possibilities = list(least_choices_slot.possible_values)
+            poss1 = possibilities[0]
+            poss2 = possibilities[1]
+            
+            init_board = self.convertArray()
+            init_board[x,y] = poss1
+            did_finish = self.bruteForce(init_board)
+            if did_finish:
+                self.boardUpdateSlot(self.game_board[x,y], poss1)
+                return
+            else:
+                self.boardUpdateSlot(self.game_board[x,y], poss2)
+                self.updateBoard()
 
     def checkSectionUnique(self, section, poss_in_section):
         did_update = False
@@ -95,28 +127,16 @@ class Board:
                         count += 1
                         slot_for_num = slot
                 if count == 1:
-                    slot_for_num.updateSlot(num)
-                    self.poss_in_rows[slot_for_num.row] -= {num}
-                    self.poss_in_columns[slot_for_num.column] -= {num}
-                    self.poss_in_grids[slot_for_num.grid] -= {num}
+                    self.boardUpdateSlot(slot_for_num, num)
                     did_update = True               
-        if did_update:
-            self.updateBoard()
+        return did_update
 
+    def boardUpdateSlot(self, slot, value):
+        slot.updateSlot(value)
+        self.poss_in_rows[slot.row] -= {value}
+        self.poss_in_columns[slot.column] -= {value}
+        self.poss_in_grids[slot.grid] -= {value}
 
-    def secondAlgo(self):
-        self.checkSectionUnique(self.game_board, self.poss_in_rows)
-        self.checkSectionUnique(np.transpose(self.game_board), self.poss_in_columns)
-        self.checkSectionUnique(self.grid_rep, self.poss_in_grids)
-
-    # def thirdAlgo:
-    #     short list length possible = 2
-    #     shortlist[0]: {1, 5}
-    #     updateBoard();
-
-    def isSolvable(self):
-
-        return True
 
     def isSolved(self):
         for i in range(9):
@@ -127,7 +147,41 @@ class Board:
                 
 class Slot:
 
+    def findLeastPoss(self):
+        for i in range(9):
+            for j in range(9):
+                if len(self.game_board[i][j].possible_values) == 2:
+                    return i, j
+        return None, None
 
+    def bruteForce(self, test_board):
+        temp_board = test_board.copy()
+        next_x, next_y = self.whereEmpty(temp_board)
+        if next_x == -1:
+            return True
+        else:
+            for num in range(1,10):
+                if self.allowed(temp_board, next_x, next_y, num):
+                    temp_board[next_x, next_y] = num
+                    if self.bruteForce(temp_board):
+                        self.game_board[next_x, next_y].updateSlot(num)
+                        return True
+                        break
+            else:
+                return False  
+
+    def allowed(self, board, x, y, num):
+        return num not in board[x] and num not in np.transpose(board)[y] and num not in board[3*(x//3):3*(x//3)+3, 3*(y//3):3*(y//3)+3]
+
+    def whereEmpty(self, board):
+        for i in range(9):
+            for j in range(9):
+                if board[i][j] == 0:
+                    return i,j
+        return -1, -1
+
+
+class Slot:
 
     def __init__(self, value, x,y):
         self.row = x
@@ -145,23 +199,63 @@ class Slot:
 
     def updatePossibleValues(self, row_values, column_values, grid_values):
         self.possible_values = set.intersection(row_values, column_values, grid_values)
-        if len(self.possible_values) == 1:
-            self.updateSlot(next(iter(self.possible_values)))
 
+def averageTimeFull(game):
+    times_list = np.zeros(10)
+    for i in range(10):
+        test_board = Board(game)
+        start = time.time()
+        test_board.updateBoard()
+        end = time.time()
+        times_list[i] = (end-start)
+    return np.average(times_list)
 
+def main():
+    #inp_game = "093007006807900234500680009009100500012508073300760920000071000000040105000206347" #EASY puzzle: average = .002s
+    #inp_game = "000300810000801002098000007019027080700000320452680000070000608200590000000000290" #MEDIUM puzzle: average = .003s
+    #hard = "000008000005300680600100004250000801000050000800920300090030002100600400760000000" #HARD puzzle: average = .003s
+    #expert = "070030050000000700030004001040001902006040005800056000010000006000005004200080000" #EXPERT puzzle: average = .25s
+    #inp_game = "002090840070600000000000001000000500800009000004080230020007310001000009000030005" #EVIL puzzle: average = .43s
+    
+    easy          = "800020910234510007710080054600100305185000720040602800068000400000000162000407530"
+    medium        = "300007086005003000000005320940102050200090700850004000089000007070040000034801900"
+    hard          = "000500900050020001300609000070180002105000087008004000004750000030208050000406020"
+    expert        = "000500000005002940006000070000050020007004100800390000403000006000400007080060002"
+    evil          = "080010000000000020006800045004100086000000700300009000400030057007000100000500200"
+    devils_sudoku = "800000000003600000070090200050007000000045700000100030001000068008500010090000400" #quote, 'the HARDEST SUDOKU PUZZLE EVER' solves in average of 3.7 seconds
+    while True:
+        try:
+            inp = int(input("1: easy\n2: medium\n3: hard\n4: expert\n5: evil \n6: 'hardest sudoku puzzle ever' "))
+            assert(0 < inp < 7)
+            break
+        except:
+            print("Invalid number, enter another one.")
 
-import time
-#inp_game = "800504013100000600002010570407000905500420000000059460081002000000975182000001000"
-inp_game = "100097000000030008609500003000000640001000000048079005930010006000000000004700530"
-#inp_game = "000010000035000040008094036600070000000309450000008000009000700000700200403002000"
-start = time.time()
-game_board = Board(inp_game)
-print(game_board)
-game_board.getRows()
-game_board.getColumns()
-game_board.getGrids()
-game_board.updateBoard()
-print("==========================================")
-print(game_board)
-end = time.time()
-print(end-start)
+    if inp == 1:
+        inp_game = easy
+    elif inp == 2:
+        inp_game = medium
+    elif inp == 3:
+        inp_game = hard
+    elif inp == 4:
+        inp_game = expert
+    elif inp == 5:
+        inp_game = evil
+    elif inp == 6:
+        inp_game = devils_sudoku    
+    
+    assert(len(inp_game) == 81)
+    game_board = Board(inp_game)
+    print(game_board)
+
+    t0 = time.time()
+    game_board.updateBoard()
+    t1 = time.time()
+    total = t1-t0
+
+    print(game_board)
+    print(total)
+    #print(averageTimeFull(inp_game))
+
+if __name__ == "__main__":
+    main()
