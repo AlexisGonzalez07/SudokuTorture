@@ -144,9 +144,7 @@ class Board:
                 if self.game_board[i][j].value == 0:
                     return False
         return True
-                
-class Slot:
-
+    
     def findLeastPoss(self):
         for i in range(9):
             for j in range(9):
