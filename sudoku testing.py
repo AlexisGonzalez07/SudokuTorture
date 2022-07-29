@@ -1,5 +1,6 @@
 import numpy as np
 import time
+# This is the class board. It has attributes such as inp to determine the game to be played. It's required to be initialized.
 class Board:
     def __init__(self, inp):
         self.inp = inp
@@ -29,7 +30,6 @@ class Board:
                 board_string += f" {self.game_board[i][j]} "#fill in the box with the index of the grid at (row i,column j)
 
             board_string += '\n'
-
         return board_string
 
     def convertArray(self):
@@ -64,6 +64,8 @@ class Board:
                 used_nums = {slot.value for slot in flattened}
                 self.poss_in_grids[3*x+y] -= used_nums
 
+
+# Methods to update each slot accessed through the board which contains those slots
     def updateBoard(self):
         did_update = False
         for row in self.game_board:
@@ -93,8 +95,8 @@ class Board:
 
     def thirdAlgo(self):
         x, y = self.findLeastPoss()
+        init_board = self.convertArray()
         if x == None:
-            init_board = self.convertArray()
             did_finish = self.bruteForce(init_board)
             if did_finish:
                 return
@@ -105,8 +107,6 @@ class Board:
             possibilities = list(least_choices_slot.possible_values)
             poss1 = possibilities[0]
             poss2 = possibilities[1]
-            
-            init_board = self.convertArray()
             init_board[x,y] = poss1
             did_finish = self.bruteForce(init_board)
             if did_finish:
@@ -178,49 +178,34 @@ class Board:
                     return i,j
         return -1, -1
 
-
+# Each slot in the Sudoku Puzzle keeps track of its row, column, and grid for easy reference. We utilize sets because each row, column, or grid can have unique values
 class Slot:
-
     def __init__(self, value, x,y):
         self.row = x
         self.column = y
         self.grid = 3 * (x//3) + (y//3)
         self.value = int(value)
-        self.possible_values = {1,2,3,4,5,6,7,8,9}
+        self.possible_values = {}
+        
     def __str__(self):
         return str(self.value)
     
     def updateSlot(self,value):
         self.value = value
         self.possible_values = {0}
-    
-
+# Here is how possible values are found
     def updatePossibleValues(self, row_values, column_values, grid_values):
         self.possible_values = set.intersection(row_values, column_values, grid_values)
 
-def averageTimeFull(game):
-    times_list = np.zeros(10)
-    for i in range(10):
-        test_board = Board(game)
-        start = time.time()
-        test_board.updateBoard()
-        end = time.time()
-        times_list[i] = (end-start)
-    return np.average(times_list)
-
+# Take your pick at one of our games, or submit your own
 def main():
-    #inp_game = "093007006807900234500680009009100500012508073300760920000071000000040105000206347" #EASY puzzle: average = .002s
-    #inp_game = "000300810000801002098000007019027080700000320452680000070000608200590000000000290" #MEDIUM puzzle: average = .003s
-    #hard = "000008000005300680600100004250000801000050000800920300090030002100600400760000000" #HARD puzzle: average = .003s
-    #expert = "070030050000000700030004001040001902006040005800056000010000006000005004200080000" #EXPERT puzzle: average = .25s
-    #inp_game = "002090840070600000000000001000000500800009000004080230020007310001000009000030005" #EVIL puzzle: average = .43s
-    
     easy          = "800020910234510007710080054600100305185000720040602800068000400000000162000407530"
     medium        = "300007086005003000000005320940102050200090700850004000089000007070040000034801900"
     hard          = "000500900050020001300609000070180002105000087008004000004750000030208050000406020"
     expert        = "000500000005002940006000070000050020007004100800390000403000006000400007080060002"
     evil          = "080010000000000020006800045004100086000000700300009000400030057007000100000500200"
     devils_sudoku = "800000000003600000070090200050007000000045700000100030001000068008500010090000400" #quote, 'the HARDEST SUDOKU PUZZLE EVER' solves in average of 3.7 seconds
+    
     while True:
         try:
             inp = int(input("1: easy\n2: medium\n3: hard\n4: expert\n5: evil \n6: 'hardest sudoku puzzle ever' "))
@@ -252,8 +237,7 @@ def main():
     total = t1-t0
 
     print(game_board)
-    print(total)
-    #print(averageTimeFull(inp_game))
-
+    print("Total time: " + str(total))
+    # Thank you for watching
 if __name__ == "__main__":
     main()
